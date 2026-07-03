@@ -1,0 +1,30 @@
+{
+  "count": 2,
+  "quotes": [
+    {
+      "exchange": "NMS",
+      "shortname": "Apple Inc.",
+      "longname": "Apple Inc.",
+      "quoteType": "EQUITY",
+      "symbol": "AAPL",
+      "exchDisp": "NASDAQ"
+    },
+    {
+      "exchange": "MEX",
+      "shortname": "Apple Inc.",
+      "quoteType": "EQUITY",
+      "symbol": "AAPL.MX",
+      "exchDisp": "Mexico"
+    }
+  ],
+  "news": [
+    {
+      "uuid": "abc-123",
+      "title": "Apple announces new product",
+      "publisher": "Reuters",
+      "link": "https://finance.yahoo.com/news/apple.html",
+      "providerPublishTime": 1714680000,
+      "type": "STORY"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "finance": {
+    "result": [
+      {
+        "documents": [
+          {
+            "symbol": "AAPL",
+            "shortName": "Apple Inc.",
+            "quoteType": "EQUITY",
+            "exchange": "NMS",
+            "regularMarketPrice": 190.5
+          },
+          {
+            "symbol": "APC.F",
+            "shortName": "APPLE INC.",
+            "quoteType": "EQUITY",
+            "exchange": "FRA",
+            "regularMarketPrice": 176.2
+          }
+        ]
+      }
+    ],
+    "error": null
+  }
+}

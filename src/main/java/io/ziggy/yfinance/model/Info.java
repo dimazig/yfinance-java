@@ -1,0 +1,21 @@
+package io.ziggy.yfinance.model;
+
+import java.time.Instant;
+import java.util.List;
+
+/** Aggregated company information assembled from a single quoteSummary call. */
+public record Info(
+        CompanyProfile profile,
+        Quote quote,
+        List<RecommendationPeriod> recommendationTrend,
+        List<UpgradeDowngrade> upgradesDowngrades,
+        List<Instant> earningsDates,
+        List<SecFiling> secFilings) {
+
+    public Info {
+        recommendationTrend = recommendationTrend == null ? List.of() : List.copyOf(recommendationTrend);
+        upgradesDowngrades = upgradesDowngrades == null ? List.of() : List.copyOf(upgradesDowngrades);
+        earningsDates = earningsDates == null ? List.of() : List.copyOf(earningsDates);
+        secFilings = secFilings == null ? List.of() : List.copyOf(secFilings);
+    }
+}
