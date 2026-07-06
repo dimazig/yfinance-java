@@ -1,5 +1,7 @@
 # yfinance-java
 
+[![Build](https://github.com/dimazigel/yfinance-java/actions/workflows/build.yml/badge.svg)](https://github.com/dimazigel/yfinance-java/actions/workflows/build.yml)
+
 A clean, type-safe **Java 21** reimplementation of the Python
 [`yfinance`](https://github.com/ranaroussi/yfinance) library, built on
 **Retrofit 3** / OkHttp 5 / Jackson and **Gradle 9.5.1**.
@@ -7,7 +9,10 @@ A clean, type-safe **Java 21** reimplementation of the Python
 It talks to Yahoo Finance's (undocumented) JSON endpoints and exposes the data
 as immutable **records** with specific types — `BigDecimal` for money,
 `Instant`/`LocalDate`/`ZoneId` for time, `java.util.Currency`, `java.net.URI`
-for URLs, and value records like `Symbol`.
+for URLs, and value records like `Symbol`. Package root: `io.ziggy.yfinance`.
+
+**Requires Java 21+.** No framework dependencies — plain library, safe to use
+from Spring, Quarkus, or a bare `main`.
 
 ## Quick start
 
@@ -62,15 +67,29 @@ thrown. A stale crumb (401/403) is automatically invalidated and the request ret
 Data-quality guarantees for storage pipelines: missing volume stays `null` (never coerced to 0),
 Yahoo's all-null padding bars are dropped, and `FinancialStatement` collections are immutable.
 
+## Configuration
+
+Everything is tuned through `EndpointConfig` (an immutable record with `with...` copies):
+
 ```java
 var config = EndpointConfig.production()
+        .withCallTimeout(Duration.ofSeconds(10))
         .withAdaptiveRateLimit(new AdaptiveRateLimitConfig(
-                true, Duration.ofMillis(500), Duration.ofSeconds(30), 2.0, 0.5, 0.2, 3));
+                true,                      // enabled
+                Duration.ofMillis(500),    // initialDelay after the first 429
+                Duration.ofSeconds(30),    // maxDelay cap
+                2.0,                       // backoffMultiplier per consecutive 429
+                0.5,                       // recoveryFactor per success while degraded
+                0.2,                       // jitterFactor (±20% on scheduled waits)
+                3));                       // maxAttempts per request (1 = never retry a 429)
 
 try (var yf = YFinance.create(config)) {
     // ...
 }
 ```
+
+`AdaptiveRateLimitConfig.defaults()` is what `EndpointConfig.production()` uses;
+`AdaptiveRateLimitConfig.disabled()` turns throttling and 429-retries off entirely.
 
 ## What's covered
 
@@ -122,6 +141,23 @@ dependencies { implementation("io.ziggy:yfinance-java:0.1.0-SNAPSHOT") }
 Unit tests never touch the network; they replay captured fixtures from
 `src/test/resources/fixtures/`. The live suite (`src/integrationTest`) verifies
 shape against real responses and is excluded from `build`.
+
+CI (GitHub Actions, `.github/workflows/build.yml`) runs `./gradlew build` on every
+push/PR and uploads the JaCoCo coverage report as an artifact. The Gradle
+configuration cache is enabled via `gradle.properties`.
+
+## Error handling
+
+All failures surface as `YFinanceException` subtypes:
+
+| Exception | Meaning |
+|---|---|
+| `YFDataException` | Yahoo error envelope, unexpected HTTP status (body included in message), or I/O failure |
+| `YFRateLimitException` | HTTP 429 after all adaptive retries; carries `retryAfter()` when Yahoo sent it |
+| `YFAuthException` | The cookie/crumb handshake failed |
+
+Batch calls via `Tickers` never throw per-symbol — each symbol yields a
+`Tickers.Result` holding either the value or the exception.
 
 > Note: Yahoo Finance has no public/supported API. This library mirrors what the
 > Python `yfinance` project does and is for personal/research use; endpoints and
